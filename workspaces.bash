@@ -10,16 +10,19 @@ run_on_workspace_change() {
         #~ sleep 0.2
     #~ fi
     xdg-user-dirs-update --set DESKTOP "$HOME/Desktop/workspace$i"
-    nemo-desktop -q
-    sleep 0.1
-    nemo-desktop &
+    case "$DESKTOP_SESSION" in
+		cinnamon)	nemo-desktop -q
+					sleep 0.1
+					nemo-desktop &;;
+		plasma)		:;;
+    esac
 }
 
 # --- Main loop ---
 
 # Run the command once at the start to set the initial desktop
-current_ws=$(wmctrl -d | grep '\*' | cut -d' ' -f1)
-run_on_workspace_change $current_ws
+#~ current_ws=$(wmctrl -d | grep '\*' | cut -d' ' -f1)
+#~ run_on_workspace_change $current_ws
 
 # Listen for all future changes
 # xprop -spy tells the X server to notify us of changes to this property
@@ -28,7 +31,7 @@ xprop -root -spy _NET_CURRENT_DESKTOP | while read -r line; do
     # The output looks like: _NET_CURRENT_DESKTOP(CARDINAL) = 1
     # We just want the last part (the "1")
     sleep 0.1
-    new_ws=$(wmctrl -d | grep '\*' | cut -d' ' -f1)
+    new_ws=$(echo $line| awk '{print $3}')
     run_on_workspace_change $new_ws
 done
 
