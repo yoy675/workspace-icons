@@ -7,5 +7,4 @@ Hidden=false
 X-GNOME-Autostart-Delay=0
 Name[en_US]=Workspaces
 Comment[en_US]=Changes desktop icons based on workspace
-AutostartCondition=GSettings org.nemo.desktop desktop-layout
-#org.gnome.desktop.background show-desktop-icons
+#~ AutostartCondition=GSettings org.nemo.desktop desktop-layout org.gnome.desktop.background show-desktop-icons
