@@ -5,10 +5,7 @@
 run_on_workspace_change() {
     local i=$1
     echo "i=$i"
-    # Your commands from the original script:
-    #~ if ps r --no-headers | grep workspace; then
-        #~ sleep 0.2
-    #~ fi
+    [ -d $HOME/Desktop/workspace$i ] || mkdir "$HOME/Desktop/workspace$i"
     xdg-user-dirs-update --set DESKTOP "$HOME/Desktop/workspace$i"
     case "$DESKTOP_SESSION" in
 		cinnamon)	nemo-desktop -q
@@ -19,10 +16,6 @@ run_on_workspace_change() {
 }
 
 # --- Main loop ---
-
-# Run the command once at the start to set the initial desktop
-#~ current_ws=$(wmctrl -d | grep '\*' | cut -d' ' -f1)
-#~ run_on_workspace_change $current_ws
 
 # Listen for all future changes
 # xprop -spy tells the X server to notify us of changes to this property
