@@ -11,6 +11,17 @@ run_on_workspace_change() {
 					sleep 0.1
 					nemo-desktop &;;
 		plasma)		:;;
+		gnome)  	gnome-extensions disable ding@rastersoft.com
+					sleep 0.1
+					gnome-extensions enable ding@rastersoft.com;;
+		xfce)       # XFCE - refresh desktop
+					xfdesktop -q
+					sleep 0.1
+					xfdesktop &;;
+		lxde)       # LXDE - similar to XFCE
+					pcmanfm-qt -q 2>/dev/null || pcmanfm -q
+					sleep 0.1
+					pcmanfm &;;
     esac
 }
 
