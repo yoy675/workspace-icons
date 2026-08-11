@@ -1,2 +1,2 @@
 # workspace-icons
-Using different icons for different workspaces
+Using different icons for different workspaces on Cinnamon
