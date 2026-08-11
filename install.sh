@@ -8,6 +8,6 @@ for (( i=1; i<$a; i++)); do
 done
 [ -d ~/.local/bin ] || mkdir ~/.local/bin
 mv ./workspaces.bash ~/.local/bin/
-sed -i 's|\$path|$HOME/.local/bin' ./workspaces.desktop
+sed -i 's|\$path|$HOME/.local/bin|' ./workspaces.desktop
 [ -d ~/.config/autostart ] || mkdir ~/.config/autostart
 mv ./workspaces.desktop ~/.config/autostart/
