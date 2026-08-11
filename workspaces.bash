@@ -4,7 +4,6 @@
 # It receives the new workspace index as its first argument (e.g., "0", "1", "2")
 run_on_workspace_change() {
     local i=$1
-    echo "i=$i"
     [ -d $HOME/Desktop/workspace$i ] || mkdir "$HOME/Desktop/workspace$i"
     xdg-user-dirs-update --set DESKTOP "$HOME/Desktop/workspace$i"
     case "$DESKTOP_SESSION" in
