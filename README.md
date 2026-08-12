@@ -21,16 +21,6 @@ cinnamon --replace &
 
 Enable the extension using the Extensions settings panel in Cinnamon.
 
-Packaging for Cinnamon Spices
-
-When preparing a submission for the Linux Mint Cinnamon Spices site, zip the contents of the extension folder (the zip must contain the files, not a parent directory):
-
-```bash
-cd "Cinnamon Extension"
-zip -r workspace-icons@yoy675.zip "workspace-icons@yoy675"
-```
-
-Upload `workspace-icons@yoy675.zip` to the Cinnamon Spices submission UI.
 
 Other installations (script-based)
 ----------------------------------
@@ -46,11 +36,6 @@ Usage
 -----
 - If using the Cinnamon extension: enable it in the Extensions panel and configure any settings via the extension's preferences (if provided).
 - If using the scripts: see `workspaces.bash` and `workspaces.desktop` for usage examples and configuration.
-
-Notes
------
-- The Cinnamon extension folder must be named exactly as its UUID (workspace-icons@yoy675) for packaging/submission.
-- Add `icon.png` (128×128) and screenshots to the extension folder before submitting to Cinnamon Spices.
 
 License
 -------
