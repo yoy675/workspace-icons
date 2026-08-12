@@ -19,17 +19,6 @@ cinnamon --replace &
 
 Enable the extension using the Extensions settings panel in Cinnamon.
 
-Packaging for Cinnamon Spices
------------------------------
-When submitting to Cinnamon Spices, zip the contents of the extension folder (the zip must contain the files, not a parent directory):
-
-```bash
-cd "Cinnamon Extension"
-zip -r workspace-icons@yoy675.zip "workspace-icons@yoy675"
-```
-
-Upload `workspace-icons@yoy675.zip` to the Cinnamon Spices submission UI.
-
 License
 -------
 See the LICENSE file in the repository.
