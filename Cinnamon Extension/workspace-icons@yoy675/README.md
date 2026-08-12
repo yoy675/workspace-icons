@@ -20,18 +20,21 @@ cd "Cinnamon Extension"
 zip -r workspace-icons@yoy675.zip "workspace-icons@yoy675"
 ```
 
-Local installation
-- For testing/installation on a machine, this repository provides an installer script in the project root. Installation is performed by running:
+Local installation (Cinnamon)
+- For testing/installation on a Cinnamon desktop, copy the extension into your local Cinnamon extensions directory:
 
 ```bash
-./install.sh
+mkdir -p ~/.local/share/cinnamon/extensions
+cp -r "Cinnamon Extension/workspace-icons@yoy675" ~/.local/share/cinnamon/extensions/
+# restart Cinnamon (log out/in or run):
+cinnamon --replace &
 ```
 
-- The installer will copy the extension into your local Cinnamon extensions directory (e.g. `~/.local/share/cinnamon/extensions`) and perform any necessary setup. Prefer using `install.sh` rather than manually copying files.
+- Enable the extension from the Extensions settings panel.
 
 Notes and recommendations
 - Add an `icon.png` (128x128) to this folder so the Cinnamon Spices web UI can show the extension icon.
 - Add screenshots to help reviewers and users understand the extension.
 - Keep `metadata.json` version incremented for new submissions.
 
-If you want, I can create a ZIP of the extension folder here in the repo (as an artifact) or add placeholder `icon.png` and example screenshots — tell me which and I'll add them.
+If you want, I can add a placeholder `icon.png` and an example screenshot, or create the zip file inside the repo for you to download. Tell me which and I'll add them.
