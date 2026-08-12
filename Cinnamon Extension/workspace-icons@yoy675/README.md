@@ -1,6 +1,6 @@
 # Workspace Icons
 
-workspace-icons@yoy675 — Switch desktop folders and icons when changing Cinnamon workspaces.
+workspace-icons@yoy675 — Switch desktop folders and icons but not desklets when changing Cinnamon workspaces.
 
 ## Description
 
