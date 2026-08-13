@@ -7,10 +7,23 @@ class WorkspaceDesktopExtension {
     constructor() {
         this._workspaceManager = global.screen;
         this._signalId = null;
+        this._gsettings = null;
     }
 
     enable() {
         log('Workspace Desktop extension enabled');
+        
+        try {
+            // Initialize GSettings for workspace configuration
+            this._gsettings = new Gio.Settings({
+                schema_id: 'org.cinnamon.desktop.wm.preferences'
+            });
+            
+            // Pre-create workspace directories based on num-workspaces setting
+            this._preCreateWorkspaceDirectories();
+        } catch (e) {
+            logError(e, 'Failed to initialize GSettings');
+        }
         
         // Listen for workspace changes
         this._signalId = this._workspaceManager.connect(
@@ -28,9 +41,34 @@ class WorkspaceDesktopExtension {
             this._workspaceManager.disconnect(this._signalId);
             this._signalId = null;
         }
+        if (this._gsettings) {
+            this._gsettings = null;
+        }
         // Merge workspace subfolders back into main ~/Desktop and clean up
         this._mergeWorkspacesBack();
         log('Workspace Desktop extension disabled');
+    }
+
+    _preCreateWorkspaceDirectories() {
+        try {
+            // Get the number of workspaces from GSettings
+            const numWorkspaces = this._gsettings.get_int('num-workspaces');
+            const homeDir = GLib.get_home_dir();
+            const desktopBaseDir = `${homeDir}/Desktop`;
+            
+            log(`Creating directories for ${numWorkspaces} workspaces`);
+            
+            // Pre-create all workspace directories
+            for (let i = 0; i < numWorkspaces; i++) {
+                const workspaceDir = `${desktopBaseDir}/workspace${i}`;
+                this._ensureDirectoryExists(workspaceDir);
+                
+                // Copy existing root Desktop files into the workspace folder on first creation
+                this._copyRootDesktopFilesToWorkspace(desktopBaseDir, workspaceDir);
+            }
+        } catch (e) {
+            logError(e, 'Error pre-creating workspace directories');
+        }
     }
 
     _onWorkspaceChanged() {
@@ -47,16 +85,13 @@ class WorkspaceDesktopExtension {
             const desktopBaseDir = `${homeDir}/Desktop`;
             const workspaceDir = `${desktopBaseDir}/workspace${workspaceIndex}`;
 
-            // 1. Create workspace directory if missing
+            // 1. Ensure workspace directory exists (in case it was deleted)
             this._ensureDirectoryExists(workspaceDir);
 
-            // 2. Copy existing root Desktop files into the workspace folder (if empty or on initial run)
-            this._copyRootDesktopFilesToWorkspace(desktopBaseDir, workspaceDir);
-
-            // 3. Update XDG Desktop directory target
+            // 2. Update XDG Desktop directory target
             this._updateXdgDesktopDir(workspaceDir);
 
-            // 4. Refresh desktop icons
+            // 3. Refresh desktop icons
             this._refreshDesktopIcons();
 
         } catch (e) {
@@ -76,11 +111,30 @@ class WorkspaceDesktopExtension {
         }
     }
 
-_copyRootDesktopFilesToWorkspace(desktopPath, workspacePath) {
+    _copyRootDesktopFilesToWorkspace(desktopPath, workspacePath) {
         const desktopDir = Gio.File.new_for_path(desktopPath);
         const wsDir = Gio.File.new_for_path(workspacePath);
 
         if (!desktopDir.query_exists(null)) return;
+
+        try {
+            // Only copy if the workspace directory is empty (first time)
+            const enumerator = wsDir.enumerate_children(
+                'standard::*',
+                Gio.FileQueryInfoFlags.NONE,
+                null
+            );
+            
+            let info = enumerator.next_file(null);
+            if (info !== null) {
+                // Directory is not empty, skip copying
+                log(`Workspace directory ${workspacePath} is not empty, skipping initial copy`);
+                return;
+            }
+        } catch (e) {
+            // If error checking, proceed with copy anyway
+            log(`Could not check if workspace directory is empty: ${e.message}`);
+        }
 
         try {
             const enumerator = desktopDir.enumerate_children(
@@ -188,7 +242,16 @@ _copyRootDesktopFilesToWorkspace(desktopPath, workspacePath) {
 
     _updateXdgDesktopDir(path) {
         try {
-            GLib.spawn_command_line_async(`xdg-user-dirs-update --set DESKTOP "${path}"`);
+            // SECURITY FIX: Use spawn_async with argument array instead of spawn_command_line_async
+            // to prevent command injection attacks
+            const argv = ['xdg-user-dirs-update', '--set', 'DESKTOP', path];
+            GLib.spawn_sync(
+                null,  // working directory
+                argv,  // argument array
+                null,  // environment
+                GLib.SpawnFlags.SEARCH_PATH,
+                null   // child setup
+            );
             log(`Updated DESKTOP to: ${path}`);
         } catch (e) {
             logError(e, 'Failed to update XDG Desktop directory');
@@ -196,32 +259,14 @@ _copyRootDesktopFilesToWorkspace(desktopPath, workspacePath) {
     }
 
     _refreshDesktopIcons() {
-        const desktopSession = GLib.getenv('XDG_CURRENT_DESKTOP') || 'GNOME';
+        const desktopSession = GLib.getenv('XDG_CURRENT_DESKTOP') || 'Cinnamon';
         
         try {
             if (desktopSession.includes('Cinnamon')) {
-                this._spawnCommand('nemo-desktop -q');
+                // SECURITY FIX: Use spawn_async with argument array
+                this._spawnCommand(['nemo-desktop', '-q']);
                 Mainloop.timeout_add(100, () => {
-                    this._spawnCommand('nemo-desktop &');
-                    return false;
-                });
-            } else if (desktopSession.includes('GNOME') || desktopSession.includes('ubuntu')) {
-                // Refresh DING extension
-                this._spawnCommand('gnome-extensions disable ding@rastersoft.com');
-                Mainloop.timeout_add(300, () => {
-                    this._spawnCommand('gnome-extensions enable ding@rastersoft.com');
-                    return false;
-                });
-            } else if (desktopSession.includes('XFCE')) {
-                this._spawnCommand('xfdesktop -q');
-                Mainloop.timeout_add(100, () => {
-                    this._spawnCommand('xfdesktop &');
-                    return false;
-                });
-            } else if (desktopSession.includes('LXDE')) {
-                this._spawnCommand('pcmanfm-qt -q 2>/dev/null || pcmanfm -q');
-                Mainloop.timeout_add(100, () => {
-                    this._spawnCommand('pcmanfm &');
+                    this._spawnCommand(['nemo-desktop']);
                     return false;
                 });
             }
@@ -230,11 +275,18 @@ _copyRootDesktopFilesToWorkspace(desktopPath, workspacePath) {
         }
     }
 
-    _spawnCommand(cmd) {
+    _spawnCommand(argv) {
         try {
-            GLib.spawn_command_line_async(cmd);
+            // SECURITY FIX: Use array-based spawning to avoid command injection
+            GLib.spawn_async(
+                null,  // working directory
+                argv,  // argument array (not a single command string)
+                null,  // environment
+                GLib.SpawnFlags.SEARCH_PATH,
+                null   // child setup
+            );
         } catch (e) {
-            logError(e, `Failed to spawn command: ${cmd}`);
+            logError(e, `Failed to spawn command: ${argv.join(' ')}`);
         }
     }
 }
